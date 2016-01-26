@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using LostMonitors.Core;
+using LostMonitors.Core.Engine;
 using LostMonitors.Core.Services;
 
 namespace LostMonitors.Console
@@ -40,7 +40,56 @@ namespace LostMonitors.Console
             {
                 return;
             }
+
+            var engine = new Engine();
+            var player1Instance = player1.GetInstance();
+            var player2Instance = player2.GetInstance();
+            var globalState = engine.Init(player1Instance, player2Instance);
+
+            System.Console.WriteLine("Player 1 delt: {0}", string.Join(", ", globalState.Player1Cards.Select(x => x.ToConcise())));
+            System.Console.WriteLine("Player 2 delt: {0}", string.Join(", ", globalState.Player1Cards.Select(x => x.ToConcise())));
+
+            var player1Turn = true;
+            GlobalBoardTurn turn;
+            while ((turn = engine.Play()) != null)
+            {
+                if (player1Turn)
+                {
+                    System.Console.Write("Player 1: ");
+                }
+                else
+                {
+                    System.Console.Write("Player 2: ");
+                }
+
+                if (turn.PlayIsDiscard)
+                {
+                    System.Console.Write("Discarded {0}, ", turn.PlayCard.ToConcise());
+                }
+                else
+                {
+                    System.Console.Write("Played {0}, ", turn.PlayCard.ToConcise());
+                }
+
+                if (turn.DrawLocation.HasValue)
+                {
+                    System.Console.Write("Took {0}, ", turn.DrawCard.ToConcise());
+                }
+                else
+                {
+                    System.Console.Write("Drew {0}, ", turn.DrawCard.ToConcise());
+                }
+
+                System.Console.WriteLine();
+
+                player1Turn = !player1Turn;
+            }
+
+            var scores = engine.Score();
+            System.Console.WriteLine("Player 1 Score: {0}", scores.Item1);
+            System.Console.WriteLine("Player 2 Score: {0}", scores.Item2);
         }
+
 
         private static Player GetPlayerFromArgument(string arg, List<Player> players)
         {
